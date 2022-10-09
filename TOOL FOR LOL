@@ -1,0 +1,117 @@
+#include <Windows.h>
+#include <stdio.h>
+#include <TlHelp32.h>
+ 
+HANDLE hProcess;
+ 
+//开启视距
+BOOL OpenSJ()
+{
+    char buff = 120;//开启视距代码
+    //向其他进程写数据
+    WriteProcessMemory(hProcess,//进程句柄
+        (void*)0x5C005B,//视距基址
+        &buff,
+        1,//需要写入的数据大小
+        NULL);
+}
+ 
+//关闭视距
+BOOL CloseSJ()
+{
+    char buff = 119;//关闭视距代码
+    //向其他进程写数据
+    WriteProcessMemory(hProcess,//进程句柄
+        (void*)0x5C005B,//视距基址
+        &buff,
+        1,//需要写入的数据大小
+        NULL);
+}
+ 
+//显示防御塔攻击范围
+BOOL ShowFW()
+{
+    char buff = 118;//开启防御塔攻击范围代码
+    //向其他进程写数据
+    WriteProcessMemory(hProcess,//进程句柄
+        (void*)0xC7E31D,//防御塔攻击范围基址
+        &buff,
+        1,//需要写入的数据大小
+        NULL);
+}
+ 
+//显示防御塔攻击范围
+BOOL CloseFW()
+{
+    char buff = 117;//关闭防御塔攻击范围代码
+    //向其他进程写数据
+    WriteProcessMemory(hProcess,//进程句柄
+        (void*)0xC7E31D,//防御塔攻击范围基址
+        &buff,
+        1,//需要写入的数据大小
+        NULL);
+}
+ 
+int main()
+{
+    system("mode 40,20");
+    DWORD PID = 0;
+    HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    PROCESSENTRY32 pe = { sizeof(PROCESSENTRY32) };
+    Process32First(hProcessSnap, &pe);
+    do
+    {
+        if (!strcmp(pe.szExeFile, "League of Legends.exe"))
+        {
+            PID = pe.th32ProcessID;
+        }
+    } while (Process32Next(hProcessSnap, &pe));
+    CloseHandle(hProcessSnap);
+    if (PID == 0)
+    {
+        printf("无法获取LOL的PID,请先进入游戏!\n");
+        system("pause");
+        return 0;
+    }
+    printf("League of Legends.exe PID为:%d\n", PID);
+ 
+    hProcess = OpenProcess(PROCESS_VM_WRITE | PROCESS_VM_OPERATION, NULL, PID);
+    if (hProcess == NULL)
+    {
+        printf("打开进程失败!请用管理员身份运行!\n");
+        system("pause");
+        return 0;
+    }
+    printf("打开进程成功!\n");
+    printf("======================\n");
+    printf("1.打开无限视距\n");
+    printf("2.关闭无限视距\n");
+    printf("3.显示防御塔攻击范围\n");
+    printf("4.关闭防御塔攻击范围\n");
+    printf("======================\n");
+    int i;
+    while (1)
+    {
+        scanf_s("%d", &i);
+        switch (i)
+        {
+        case 1:
+            OpenSJ();
+            break;
+        case 2:
+            CloseSJ();
+            break;
+        case 3:
+            ShowFW();
+            break;
+        case 4:
+            CloseFW();
+            break;
+        default:
+            CloseHandle(hProcess);
+            return 0;
+        }
+    }
+    system("pause");
+    return 0;
+}
